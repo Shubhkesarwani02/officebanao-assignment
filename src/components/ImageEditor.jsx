@@ -1,4 +1,4 @@
-// import React, { useState, useCallback, useEffect } from "react";
+// import React, { useState, useCallback, useEffect, useRef } from "react";
 // import {
 //   Box,
 //   Button,
@@ -10,12 +10,10 @@
 //   CircularProgress,
 // } from "@mui/material";
 // import {
-//   Crop as CropIcon,
 //   RotateRight as RotateRightIcon,
 //   FlipOutlined,
 //   Flip,
 //   Upload as UploadIcon,
-//   Delete as DeleteIcon,
 //   Save as SaveIcon,
 //   Cancel as CancelIcon,
 //   ZoomIn as ZoomInIcon,
@@ -38,16 +36,31 @@
 //   const [isReplacing, setIsReplacing] = useState(false);
 //   const [isSaving, setIsSaving] = useState(false);
 //   const [imageLoaded, setImageLoaded] = useState(false);
-//   const [selectedAspect, setSelectedAspect] = useState({
-//     value: 4 / 3,
-//     label: "4:3",
-//   });
+//   const [selectedAspect, setSelectedAspect] = useState({ value: 4/3, label: "4:3" });
 //   const [isImageError, setIsImageError] = useState(false);
+  
+//   // Ref to store the current transformation state
+//   const transformationRef = useRef({
+//     rotation,
+//     isFlippedHorizontally,
+//     isFlippedVertically
+//   });
+  
+//   // Update ref when state changes
+//   useEffect(() => {
+//     transformationRef.current = {
+//       rotation,
+//       isFlippedHorizontally,
+//       isFlippedVertically
+//     };
+//   }, [rotation, isFlippedHorizontally, isFlippedVertically]);
 
+//   // Reset loaded state when source changes
 //   useEffect(() => {
 //     setImageLoaded(false);
 //     setIsImageError(false);
-
+    
+//     // Preload the image to check for errors
 //     const img = new Image();
 //     img.onload = () => setImageLoaded(true);
 //     img.onerror = () => setIsImageError(true);
@@ -56,11 +69,11 @@
 
 //   const aspectRatios = [
 //     { value: 1, label: "1:1" },
-//     { value: 4 / 3, label: "4:3" },
-//     { value: 16 / 9, label: "16:9" },
-//     { value: 3 / 4, label: "3:4" },
-//     { value: 9 / 16, label: "9:16" },
-//     { value: 0, label: "Free" },
+//     { value: 4/3, label: "4:3" },
+//     { value: 16/9, label: "16:9" },
+//     { value: 3/4, label: "3:4" },
+//     { value: 9/16, label: "9:16" },
+//     { value: 0, label: "Free" }
 //   ];
 
 //   const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
@@ -69,6 +82,7 @@
 
 //   const handleAspectRatioChange = (ratio) => {
 //     setSelectedAspect(ratio);
+//     // Reset crop position when changing aspect ratio
 //     setCrop({ x: 0, y: 0 });
 //   };
 
@@ -78,12 +92,15 @@
 //       let resultSrc = currentSrc;
 
 //       if (croppedAreaPixels) {
+//         // Get current transformation values from ref to ensure latest values
+//         const { rotation: currentRotation, isFlippedHorizontally: currentFlipH, isFlippedVertically: currentFlipV } = transformationRef.current;
+        
 //         resultSrc = await getCroppedImg(
 //           currentSrc,
 //           croppedAreaPixels,
-//           rotation,
-//           isFlippedHorizontally,
-//           isFlippedVertically
+//           currentRotation,
+//           currentFlipH,
+//           currentFlipV
 //         );
 //       }
 
@@ -130,6 +147,11 @@
 //       const reader = new FileReader();
 
 //       reader.onload = () => {
+//         // Clean up previous object URL if it exists
+//         if (currentSrc && currentSrc.startsWith('blob:')) {
+//           URL.revokeObjectURL(currentSrc);
+//         }
+        
 //         setCurrentSrc(reader.result);
 //         setIsReplacing(false);
 //         resetEditorState();
@@ -141,7 +163,7 @@
 
 //       reader.readAsDataURL(file);
 //     }
-//   }, []);
+//   }, [currentSrc]);
 
 //   const resetEditorState = () => {
 //     setCrop({ x: 0, y: 0 });
@@ -150,7 +172,7 @@
 //     setIsFlippedHorizontally(false);
 //     setIsFlippedVertically(false);
 //     setCroppedAreaPixels(null);
-//     setSelectedAspect({ value: 4 / 3, label: "4:3" });
+//     setSelectedAspect({ value: 4/3, label: "4:3" });
 //   };
 
 //   const { getRootProps, getInputProps } = useDropzone({
@@ -206,30 +228,30 @@
 //           </Button>
 //         </Box>
 //       ) : (
-//         <Box
-//           sx={{
-//             position: "relative",
-//             height: 400,
-//             mb: 2,
+//         <Box 
+//           sx={{ 
+//             position: "relative", 
+//             height: 400, 
+//             mb: 2, 
 //             bgcolor: "black",
 //             borderRadius: 1,
 //             overflow: "hidden",
 //             display: "flex",
 //             justifyContent: "center",
-//             alignItems: "center",
+//             alignItems: "center"
 //           }}
 //         >
 //           {!imageLoaded && !isImageError && (
 //             <CircularProgress sx={{ position: "absolute", zIndex: 1 }} />
 //           )}
-
+          
 //           {isImageError ? (
 //             <Box sx={{ textAlign: "center", color: "error.main" }}>
 //               <Typography variant="body1">
 //                 Error loading image. The image may be corrupted.
 //               </Typography>
-//               <Button
-//                 variant="contained"
+//               <Button 
+//                 variant="contained" 
 //                 onClick={() => setIsReplacing(true)}
 //                 sx={{ mt: 2 }}
 //               >
@@ -249,6 +271,11 @@
 //               objectFit="contain"
 //               showGrid={true}
 //               onMediaLoaded={() => setImageLoaded(true)}
+//               transforms={{
+//                 rotateAngle: rotation,
+//                 scaleX: isFlippedHorizontally ? -1 : 1,
+//                 scaleY: isFlippedVertically ? -1 : 1
+//               }}
 //               style={{
 //                 containerStyle: {
 //                   width: "100%",
@@ -257,13 +284,7 @@
 //                 },
 //                 cropAreaStyle: {
 //                   border: "2px solid #fff",
-//                 },
-//                 mediaStyle: {
-//                   transform: `scale(${isFlippedHorizontally ? -1 : 1}, ${
-//                     isFlippedVertically ? -1 : 1
-//                   })`,
-//                   transition: "transform 0.3s",
-//                 },
+//                 }
 //               }}
 //             />
 //           )}
@@ -274,30 +295,20 @@
 //         <>
 //           <Box sx={{ mb: 2 }}>
 //             <Typography gutterBottom>Aspect Ratio</Typography>
-//             <Stack
-//               direction="row"
-//               spacing={1}
-//               sx={{ mb: 2, flexWrap: "wrap", gap: 1 }}
-//             >
+//             <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: "wrap", gap: 1 }}>
 //               {aspectRatios.map((ratio) => (
 //                 <Button
 //                   key={ratio.label}
-//                   variant={
-//                     selectedAspect.label === ratio.label
-//                       ? "contained"
-//                       : "outlined"
-//                   }
+//                   variant={selectedAspect.label === ratio.label ? "contained" : "outlined"}
 //                   size="small"
 //                   onClick={() => handleAspectRatioChange(ratio)}
-//                   startIcon={
-//                     ratio.value === 0 ? <CropFreeIcon /> : <AspectRatioIcon />
-//                   }
+//                   startIcon={ratio.value === 0 ? <CropFreeIcon /> : <AspectRatioIcon />}
 //                 >
 //                   {ratio.label}
 //                 </Button>
 //               ))}
 //             </Stack>
-
+            
 //             <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
 //               <Typography sx={{ mr: 2 }}>Zoom</Typography>
 //               <IconButton onClick={handleZoomOut} disabled={zoom <= 1}>
@@ -363,13 +374,7 @@
 //         <Button
 //           variant="contained"
 //           color="primary"
-//           startIcon={
-//             isSaving ? (
-//               <CircularProgress size={20} color="inherit" />
-//             ) : (
-//               <SaveIcon />
-//             )
-//           }
+//           startIcon={isSaving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
 //           onClick={handleSave}
 //           disabled={isReplacing || isSaving || isImageError || !imageLoaded}
 //           sx={{ flexGrow: 1 }}
@@ -389,6 +394,7 @@
 // }
 
 // export default ImageEditor;
+
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import {
@@ -518,11 +524,11 @@ function ImageEditor({ image, onSave, onCancel }) {
   };
 
   const handleFlipHorizontal = () => {
-    setIsFlippedHorizontally((prev) => !prev);
+    setIsFlippedHorizontally(prev => !prev);
   };
 
   const handleFlipVertical = () => {
-    setIsFlippedVertically((prev) => !prev);
+    setIsFlippedVertically(prev => !prev);
   };
 
   const handleZoomIn = () => {
@@ -676,6 +682,11 @@ function ImageEditor({ image, onSave, onCancel }) {
                 },
                 cropAreaStyle: {
                   border: "2px solid #fff",
+                },
+                mediaStyle: {
+                  // This is important for ensuring flip transforms are applied to the preview
+                  transform: `scaleX(${isFlippedHorizontally ? -1 : 1}) scaleY(${isFlippedVertically ? -1 : 1})`,
+                  transition: 'transform 0.2s ease'
                 }
               }}
             />
