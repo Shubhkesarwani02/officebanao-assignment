@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   Box,
   Button,
@@ -6,16 +6,22 @@ import {
   Typography,
   Slider,
   IconButton,
+  Tooltip,
+  CircularProgress,
 } from "@mui/material";
 import {
   Crop as CropIcon,
   RotateRight as RotateRightIcon,
   FlipOutlined,
-  Flip, 
+  Flip,
   Upload as UploadIcon,
   Delete as DeleteIcon,
   Save as SaveIcon,
   Cancel as CancelIcon,
+  ZoomIn as ZoomInIcon,
+  ZoomOut as ZoomOutIcon,
+  AspectRatio as AspectRatioIcon,
+  CropFree as CropFreeIcon,
 } from "@mui/icons-material";
 import Cropper from "react-easy-crop";
 import { getCroppedImg } from "../utils/imageUtils";
@@ -30,13 +36,45 @@ function ImageEditor({ image, onSave, onCancel }) {
   const [isFlippedVertically, setIsFlippedVertically] = useState(false);
   const [currentSrc, setCurrentSrc] = useState(image.src);
   const [isReplacing, setIsReplacing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [selectedAspect, setSelectedAspect] = useState({
+    value: 4 / 3,
+    label: "4:3",
+  });
+  const [isImageError, setIsImageError] = useState(false);
+
+  useEffect(() => {
+    setImageLoaded(false);
+    setIsImageError(false);
+
+    const img = new Image();
+    img.onload = () => setImageLoaded(true);
+    img.onerror = () => setIsImageError(true);
+    img.src = currentSrc;
+  }, [currentSrc]);
+
+  const aspectRatios = [
+    { value: 1, label: "1:1" },
+    { value: 4 / 3, label: "4:3" },
+    { value: 16 / 9, label: "16:9" },
+    { value: 3 / 4, label: "3:4" },
+    { value: 9 / 16, label: "9:16" },
+    { value: 0, label: "Free" },
+  ];
 
   const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
+  const handleAspectRatioChange = (ratio) => {
+    setSelectedAspect(ratio);
+    setCrop({ x: 0, y: 0 });
+  };
+
   const handleSave = async () => {
     try {
+      setIsSaving(true);
       let resultSrc = currentSrc;
 
       if (croppedAreaPixels) {
@@ -49,6 +87,10 @@ function ImageEditor({ image, onSave, onCancel }) {
         );
       }
 
+      if (!resultSrc) {
+        throw new Error("Failed to process image");
+      }
+
       onSave({
         ...image,
         src: resultSrc,
@@ -56,6 +98,9 @@ function ImageEditor({ image, onSave, onCancel }) {
       });
     } catch (e) {
       console.error("Error saving image:", e);
+      alert("There was a problem saving your image. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -71,6 +116,14 @@ function ImageEditor({ image, onSave, onCancel }) {
     setIsFlippedVertically((prev) => !prev);
   };
 
+  const handleZoomIn = () => {
+    setZoom((prevZoom) => Math.min(prevZoom + 0.1, 3));
+  };
+
+  const handleZoomOut = () => {
+    setZoom((prevZoom) => Math.max(prevZoom - 0.1, 1));
+  };
+
   const onDrop = useCallback((acceptedFiles) => {
     if (acceptedFiles && acceptedFiles.length > 0) {
       const file = acceptedFiles[0];
@@ -79,22 +132,31 @@ function ImageEditor({ image, onSave, onCancel }) {
       reader.onload = () => {
         setCurrentSrc(reader.result);
         setIsReplacing(false);
-        setCrop({ x: 0, y: 0 });
-        setZoom(1);
-        setRotation(0);
-        setIsFlippedHorizontally(false);
-        setIsFlippedVertically(false);
-        setCroppedAreaPixels(null);
+        resetEditorState();
+      };
+
+      reader.onerror = () => {
+        alert("Error reading file. Please try another image.");
       };
 
       reader.readAsDataURL(file);
     }
   }, []);
 
+  const resetEditorState = () => {
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    setRotation(0);
+    setIsFlippedHorizontally(false);
+    setIsFlippedVertically(false);
+    setCroppedAreaPixels(null);
+    setSelectedAspect({ value: 4 / 3, label: "4:3" });
+  };
+
   const { getRootProps, getInputProps } = useDropzone({
     onDrop,
     accept: {
-      "image/*": [".jpeg", ".jpg", ".png", ".gif"],
+      "image/*": [".jpeg", ".jpg", ".png", ".gif", ".webp"],
     },
     multiple: false,
   });
@@ -118,6 +180,11 @@ function ImageEditor({ image, onSave, onCancel }) {
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
+            cursor: "pointer",
+            "&:hover": {
+              borderColor: "primary.main",
+              backgroundColor: "rgba(0, 0, 0, 0.04)",
+            },
           }}
         >
           <input {...getInputProps()} />
@@ -129,73 +196,165 @@ function ImageEditor({ image, onSave, onCancel }) {
             variant="outlined"
             color="error"
             startIcon={<CancelIcon />}
-            onClick={() => setIsReplacing(false)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsReplacing(false);
+            }}
             sx={{ mt: 2 }}
           >
             Cancel Replace
           </Button>
         </Box>
       ) : (
-        <Box sx={{ position: "relative", height: 400, mb: 2 }}>
-          <Cropper
-            image={currentSrc}
-            crop={crop}
-            zoom={zoom}
-            rotation={rotation}
-            aspect={4 / 3}
-            onCropChange={setCrop}
-            onCropComplete={onCropComplete}
-            onZoomChange={setZoom}
-            objectFit="contain"
-            transform={`scale(${isFlippedHorizontally ? -1 : 1}, ${
-              isFlippedVertically ? -1 : 1
-            })`}
-          />
+        <Box
+          sx={{
+            position: "relative",
+            height: 400,
+            mb: 2,
+            bgcolor: "black",
+            borderRadius: 1,
+            overflow: "hidden",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          {!imageLoaded && !isImageError && (
+            <CircularProgress sx={{ position: "absolute", zIndex: 1 }} />
+          )}
+
+          {isImageError ? (
+            <Box sx={{ textAlign: "center", color: "error.main" }}>
+              <Typography variant="body1">
+                Error loading image. The image may be corrupted.
+              </Typography>
+              <Button
+                variant="contained"
+                onClick={() => setIsReplacing(true)}
+                sx={{ mt: 2 }}
+              >
+                Replace Image
+              </Button>
+            </Box>
+          ) : (
+            <Cropper
+              image={currentSrc}
+              crop={crop}
+              zoom={zoom}
+              rotation={rotation}
+              aspect={selectedAspect.value || null}
+              onCropChange={setCrop}
+              onCropComplete={onCropComplete}
+              onZoomChange={setZoom}
+              objectFit="contain"
+              showGrid={true}
+              onMediaLoaded={() => setImageLoaded(true)}
+              style={{
+                containerStyle: {
+                  width: "100%",
+                  height: "100%",
+                  backgroundColor: "black",
+                },
+                cropAreaStyle: {
+                  border: "2px solid #fff",
+                },
+                mediaStyle: {
+                  transform: `scale(${isFlippedHorizontally ? -1 : 1}, ${
+                    isFlippedVertically ? -1 : 1
+                  })`,
+                  transition: "transform 0.3s",
+                },
+              }}
+            />
+          )}
         </Box>
       )}
 
-      {!isReplacing && (
+      {!isReplacing && imageLoaded && !isImageError && (
         <>
           <Box sx={{ mb: 2 }}>
-            <Typography gutterBottom>Zoom</Typography>
-            <Slider
-              value={zoom}
-              min={1}
-              max={3}
-              step={0.1}
-              onChange={(e, newZoom) => setZoom(newZoom)}
-            />
+            <Typography gutterBottom>Aspect Ratio</Typography>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{ mb: 2, flexWrap: "wrap", gap: 1 }}
+            >
+              {aspectRatios.map((ratio) => (
+                <Button
+                  key={ratio.label}
+                  variant={
+                    selectedAspect.label === ratio.label
+                      ? "contained"
+                      : "outlined"
+                  }
+                  size="small"
+                  onClick={() => handleAspectRatioChange(ratio)}
+                  startIcon={
+                    ratio.value === 0 ? <CropFreeIcon /> : <AspectRatioIcon />
+                  }
+                >
+                  {ratio.label}
+                </Button>
+              ))}
+            </Stack>
+
+            <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+              <Typography sx={{ mr: 2 }}>Zoom</Typography>
+              <IconButton onClick={handleZoomOut} disabled={zoom <= 1}>
+                <ZoomOutIcon />
+              </IconButton>
+              <Slider
+                value={zoom}
+                min={1}
+                max={3}
+                step={0.1}
+                onChange={(e, newZoom) => setZoom(newZoom)}
+                sx={{ mx: 2, flexGrow: 1 }}
+              />
+              <IconButton onClick={handleZoomIn} disabled={zoom >= 3}>
+                <ZoomInIcon />
+              </IconButton>
+            </Box>
           </Box>
 
-          <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-            <IconButton
-              onClick={handleRotate}
-              color="primary"
-              title="Rotate 90° clockwise"
-            >
-              <RotateRightIcon />
-            </IconButton>
-            <IconButton
-              onClick={handleFlipHorizontal}
-              color={isFlippedHorizontally ? "secondary" : "primary"}
-              title="Flip horizontally"
-            >
-              <FlipOutlined style={{ transform: "rotate(90deg)" }} />
-            </IconButton>
-            <IconButton
-              onClick={handleFlipVertical}
-              color={isFlippedVertically ? "secondary" : "primary"}
-              title="Flip vertically"
-            >
-              <Flip />
-            </IconButton>
-            <IconButton
-              onClick={() => setIsReplacing(true)}
-              color="primary"
-              title="Replace image"
-            >
-              <UploadIcon />
-            </IconButton>
+          <Typography gutterBottom>Transformations</Typography>
+          <Stack direction="row" spacing={2} sx={{ mb: 2, flexWrap: "wrap" }}>
+            <Tooltip title="Rotate 90° clockwise">
+              <IconButton
+                onClick={handleRotate}
+                color="primary"
+                sx={{ border: "1px solid", borderColor: "divider" }}
+              >
+                <RotateRightIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Flip horizontally">
+              <IconButton
+                onClick={handleFlipHorizontal}
+                color={isFlippedHorizontally ? "secondary" : "primary"}
+                sx={{ border: "1px solid", borderColor: "divider" }}
+              >
+                <FlipOutlined style={{ transform: "rotate(90deg)" }} />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Flip vertically">
+              <IconButton
+                onClick={handleFlipVertical}
+                color={isFlippedVertically ? "secondary" : "primary"}
+                sx={{ border: "1px solid", borderColor: "divider" }}
+              >
+                <Flip />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Replace image">
+              <IconButton
+                onClick={() => setIsReplacing(true)}
+                color="primary"
+                sx={{ border: "1px solid", borderColor: "divider" }}
+              >
+                <UploadIcon />
+              </IconButton>
+            </Tooltip>
           </Stack>
         </>
       )}
@@ -204,11 +363,18 @@ function ImageEditor({ image, onSave, onCancel }) {
         <Button
           variant="contained"
           color="primary"
-          startIcon={<SaveIcon />}
+          startIcon={
+            isSaving ? (
+              <CircularProgress size={20} color="inherit" />
+            ) : (
+              <SaveIcon />
+            )
+          }
           onClick={handleSave}
-          disabled={isReplacing}
+          disabled={isReplacing || isSaving || isImageError || !imageLoaded}
+          sx={{ flexGrow: 1 }}
         >
-          Save
+          {isSaving ? "Saving..." : "Save"}
         </Button>
         <Button
           variant="outlined"
