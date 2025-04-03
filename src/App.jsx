@@ -1,30 +1,46 @@
-import React, { useState } from "react";
-import ImageUploader from "./components/imageUploader";
-import ImageEditor from "./components/imageEditor";
-import MasonryGallery from "./components/MasonryGallery";
-import "./styles/App.css";
+import React, { useState } from 'react';
+import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
+import AppLayout from './components/AppLayout.jsx';
 
-const App = () => {
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#2196f3',
+    },
+    secondary: {
+      main: '#f50057',
+    },
+  },
+});
+
+function App() {
   const [images, setImages] = useState([]);
-  const [currentImage, setCurrentImage] = useState(null);
 
-  const handleImageUpload = (image) => {
-    setCurrentImage(image);
+  const addImage = (newImage) => {
+    setImages((prevImages) => [...prevImages, newImage]);
   };
 
-  const handleSaveImage = (editedImage) => {
-    setImages([...images, editedImage]);
-    setCurrentImage(null);
+  const updateImage = (id, updatedImage) => {
+    setImages((prevImages) =>
+      prevImages.map((image) => (image.id === id ? { ...image, ...updatedImage } : image))
+    );
+  };
+
+  const deleteImage = (id) => {
+    setImages((prevImages) => prevImages.filter((image) => image.id !== id));
   };
 
   return (
-    <div>
-      <h1>Image Asset Manager</h1>
-      <ImageUploader onImageUpload={handleImageUpload} />
-      <ImageEditor image={currentImage} onSave={handleSaveImage} onClose={() => setCurrentImage(null)} />
-      <MasonryGallery images={images} />
-    </div>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <AppLayout
+        images={images}
+        onAddImage={addImage}
+        onUpdateImage={updateImage}
+        onDeleteImage={deleteImage}
+      />
+    </ThemeProvider>
   );
-};
+}
 
 export default App;
