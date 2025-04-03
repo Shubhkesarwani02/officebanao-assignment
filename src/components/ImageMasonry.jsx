@@ -16,7 +16,6 @@ function ImageMasonry({ images, onUpdateImage, onDeleteImage }) {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [imageStatus, setImageStatus] = useState({});
 
-  // Track loading status for each image
   useEffect(() => {
     const newStatus = {};
     images.forEach(img => {
@@ -45,7 +44,6 @@ function ImageMasonry({ images, onUpdateImage, onDeleteImage }) {
   };
 
   const handleSaveEdit = (editedImage) => {
-    // If the URL is an object URL (blob:), we need to revoke the old one to prevent memory leaks
     if (selectedImage && selectedImage.src && selectedImage.src.startsWith('blob:')) {
       URL.revokeObjectURL(selectedImage.src);
     }
@@ -61,7 +59,6 @@ function ImageMasonry({ images, onUpdateImage, onDeleteImage }) {
   };
 
   const handleDelete = (image) => {
-    // Clean up object URLs when deleting images
     if (image.src && image.src.startsWith('blob:')) {
       URL.revokeObjectURL(image.src);
     }
@@ -110,7 +107,7 @@ function ImageMasonry({ images, onUpdateImage, onDeleteImage }) {
             <Box 
               sx={{ 
                 position: 'relative',
-                paddingTop: '75%', /* 4:3 Aspect Ratio */
+                paddingTop: '75%',
                 backgroundColor: 'rgba(0,0,0,0.05)',
                 display: 'flex',
                 justifyContent: 'center',
