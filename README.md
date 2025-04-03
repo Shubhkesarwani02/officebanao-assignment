@@ -112,5 +112,7 @@ officebanao-assignment/
 
 ## Deployment
 
-[This section will be added in the future with specific deployment instructions.]
+   - Live Deployment: Hosted on Vercel for fast and seamless performance.
+   - Easy Setup: Just connect the repo, configure build settings, and deploy.
+   - Accessible Anywhere: Get a shareable live link instantly after deployment.
 
