@@ -1,4 +1,4 @@
-# Image Asset Management Application
+# OfficeBanao Assignment - Image Management Application
 
 A modern, responsive React application for uploading, editing, and managing image assets. This application allows users to upload images, perform basic image editing operations, and view their image collection in an attractive masonry-style layout.
 
@@ -17,8 +17,8 @@ To get started with this project, clone the repository and install the dependenc
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/image-management-app.git
-cd image-management-app
+git clone https://github.com/Shubhkesarwani02/officebanao-assignment.git
+cd officebanao-assignment
 
 # Install dependencies
 npm install
@@ -70,7 +70,7 @@ This will start the Vite development server, typically at `http://localhost:5173
 ## Project Structure
 
 ```
-image-management-app/
+officebanao-assignment/
 ├── index.html
 ├── vite.config.js
 ├── package.json
@@ -113,3 +113,4 @@ image-management-app/
 ## Deployment
 
 [This section will be added in the future with specific deployment instructions.]
+
