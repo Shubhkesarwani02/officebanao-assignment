@@ -14,28 +14,23 @@ export const getCroppedImg = async (
     return null;
   }
 
-  // Calculate bounding box of the rotated image
   const maxSize = Math.max(image.width, image.height);
   const safeArea = 2 * ((maxSize / 2) * Math.sqrt(2));
 
-  // Set canvas dimensions to bounding box
   canvas.width = safeArea;
   canvas.height = safeArea;
 
-  // Translate canvas context to center
   ctx.translate(safeArea / 2, safeArea / 2);
   ctx.rotate((rotation * Math.PI) / 180);
   ctx.scale(flipHorizontal ? -1 : 1, flipVertical ? -1 : 1);
   ctx.translate(-safeArea / 2, -safeArea / 2);
 
-  // Draw rotated image
   ctx.drawImage(
     image,
     safeArea / 2 - image.width * 0.5,
     safeArea / 2 - image.height * 0.5
   );
 
-  // Create a second canvas for the actual crop
   const cropCanvas = document.createElement("canvas");
   const cropCtx = cropCanvas.getContext("2d");
 
@@ -44,11 +39,9 @@ export const getCroppedImg = async (
     return null;
   }
 
-  // Set dimensions
   cropCanvas.width = pixelCrop.width;
   cropCanvas.height = pixelCrop.height;
 
-  // Draw cropped image
   cropCtx.drawImage(
     canvas,
     pixelCrop.x,
@@ -61,7 +54,6 @@ export const getCroppedImg = async (
     pixelCrop.height
   );
 
-  // Return as a promise
   return new Promise((resolve, reject) => {
     cropCanvas.toBlob(
       (blob) => {
@@ -73,17 +65,16 @@ export const getCroppedImg = async (
         resolve(croppedImageUrl);
       },
       "image/jpeg",
-      0.95 // Quality
+      0.95
     );
   });
 };
 
-// Helper function to create an image element from a URL
 const createImage = (url) =>
   new Promise((resolve, reject) => {
     const image = new Image();
     image.addEventListener("load", () => resolve(image));
     image.addEventListener("error", (error) => reject(error));
-    image.setAttribute("crossOrigin", "anonymous"); // Handle CORS issues
+    image.setAttribute("crossOrigin", "anonymous");
     image.src = url;
   });

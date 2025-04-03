@@ -10,8 +10,8 @@ import {
 import {
   Crop as CropIcon,
   RotateRight as RotateRightIcon,
-  FlipOutlined, // Replace FlipHorizontal
-  Flip, // Replace FlipVertical
+  FlipOutlined,
+  Flip, 
   Upload as UploadIcon,
   Delete as DeleteIcon,
   Save as SaveIcon,
@@ -19,7 +19,6 @@ import {
 } from "@mui/icons-material";
 import Cropper from "react-easy-crop";
 import { getCroppedImg } from "../utils/imageUtils";
-// import { v4 as uuidv4 } from "uuid";
 import { useDropzone } from "react-dropzone";
 
 function ImageEditor({ image, onSave, onCancel }) {
@@ -31,7 +30,6 @@ function ImageEditor({ image, onSave, onCancel }) {
   const [isFlippedVertically, setIsFlippedVertically] = useState(false);
   const [currentSrc, setCurrentSrc] = useState(image.src);
   const [isReplacing, setIsReplacing] = useState(false);
-  // const [editMode, setEditMode] = useState("crop"); // 'crop', 'rotate', 'flip'
 
   const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
     setCroppedAreaPixels(croppedAreaPixels);
@@ -41,7 +39,6 @@ function ImageEditor({ image, onSave, onCancel }) {
     try {
       let resultSrc = currentSrc;
 
-      // Apply cropping if we have croppedAreaPixels
       if (croppedAreaPixels) {
         resultSrc = await getCroppedImg(
           currentSrc,
@@ -82,7 +79,6 @@ function ImageEditor({ image, onSave, onCancel }) {
       reader.onload = () => {
         setCurrentSrc(reader.result);
         setIsReplacing(false);
-        // Reset editing options
         setCrop({ x: 0, y: 0 });
         setZoom(1);
         setRotation(0);

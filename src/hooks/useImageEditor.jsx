@@ -31,7 +31,6 @@ export default function useImageEditor(initialImage) {
       ...prevImage,
       src: newImageSrc,
     }));
-    // Reset editing options
     setCrop({ x: 0, y: 0 });
     setZoom(1);
     setRotation(0);

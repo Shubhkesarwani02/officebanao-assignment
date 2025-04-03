@@ -61,10 +61,10 @@ function ImageUpload({ onAddImage }) {
         <input {...getInputProps()} />
         <CloudUploadIcon color="primary" sx={{ fontSize: 48, mb: 2 }} />
         <Typography variant="h6" gutterBottom>
-          Drag & drop an image here
+          Drag & drop your image here
         </Typography>
         <Typography variant="body2" color="textSecondary" gutterBottom>
-          or click to select an image
+          or click to select your image
         </Typography>
         <Button variant="contained" color="primary" sx={{ mt: 2 }}>
           Upload Image

@@ -8,7 +8,7 @@ function AppLayout({ images, onAddImage, onUpdateImage, onDeleteImage }) {
     <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom align="center">
-          Image Asset Management
+          Manipulate your images here!
         </Typography>
         <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
           <ImageUpload onAddImage={onAddImage} />

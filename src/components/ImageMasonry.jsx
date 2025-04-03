@@ -39,7 +39,7 @@ function ImageMasonry({ images, onUpdateImage, onDeleteImage }) {
     return (
       <Box sx={{ textAlign: 'center', py: 4 }}>
         <Typography variant="body1" color="textSecondary">
-          No images uploaded yet. Upload an image to get started.
+          No images uploaded yet, Upload an image to get started!
         </Typography>
       </Box>
     );
