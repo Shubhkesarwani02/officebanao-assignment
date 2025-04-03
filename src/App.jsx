@@ -1,35 +1,30 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useState } from "react";
+import ImageUploader from "./components/imageUploader";
+import ImageEditor from "./components/imageEditor";
+import MasonryGallery from "./components/MasonryGallery";
+import "./styles/App.css";
 
-function App() {
-  const [count, setCount] = useState(0)
+const App = () => {
+  const [images, setImages] = useState([]);
+  const [currentImage, setCurrentImage] = useState(null);
+
+  const handleImageUpload = (image) => {
+    setCurrentImage(image);
+  };
+
+  const handleSaveImage = (editedImage) => {
+    setImages([...images, editedImage]);
+    setCurrentImage(null);
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <div>
+      <h1>Image Asset Manager</h1>
+      <ImageUploader onImageUpload={handleImageUpload} />
+      <ImageEditor image={currentImage} onSave={handleSaveImage} onClose={() => setCurrentImage(null)} />
+      <MasonryGallery images={images} />
+    </div>
+  );
+};
 
-export default App
+export default App;
