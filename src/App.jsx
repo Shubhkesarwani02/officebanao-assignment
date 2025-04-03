@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
 import AppLayout from './components/AppLayout.jsx';
+import './App.css';
 
 const theme = createTheme({
   palette: {
